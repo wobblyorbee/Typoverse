@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypoVerse — Speed Typing & Code Trainer</title>
+  <meta name="description" content="Modern, aesthetic speed typing test and code trainer inspired by MonkeyType with cyber glow UI, real-time WPM, mechanical sound effects, and code syntax modes.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js for result analysis -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow particles -->
+  <div class="glow-bg"></div>
+  <div class="blob-1"></div>
+  <div class="blob-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Typo<span>Verse</span></h1>
+          <p class="tagline">Next-Gen Speed Typing & Code Trainer</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Sound switch -->
+        <button id="soundToggleBtn" class="icon-btn tooltip" data-tooltip="Suara Keyboard (M)">
+          <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+        </button>
+        <!-- Sound Profile Picker -->
+        <div class="sound-select-wrapper">
+          <select id="soundProfileSelect" class="custom-select" title="Pilih Suara Keyboard">
+            <option value="thock">Mechanical Thock</option>
+            <option value="click">Cherry Blue Click</option>
+            <option value="bubble">Soft Bubble</option>
+            <option value="cyber">Cyber Beep</option>
+          </select>
+        </div>
+        <!-- Theme Toggle -->
+        <button id="themePickerBtn" class="icon-btn tooltip" data-tooltip="Pilih Tema">
+          <i class="fa-solid fa-palette"></i>
+        </button>
+        <!-- History / Stats Modal -->
+        <button id="statsModalBtn" class="icon-btn tooltip" data-tooltip="Statistik & Riwayat">
+          <i class="fa-solid fa-chart-simple"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Theme Dropdown Popover -->
+    <div id="themeDropdown" class="theme-dropdown hidden">
+      <div class="theme-option active" data-theme="tokyo-night">
+        <span class="color-preview" style="background: linear-gradient(135deg, #1a1b26, #7aa2f7);"></span>
+        Tokyo Night
+      </div>
+      <div class="theme-option" data-theme="cyberpunk">
+        <span class="color-preview" style="background: linear-gradient(135deg, #0d0f18, #f72585);"></span>
+        Cyber Neon
+      </div>
+      <div class="theme-option" data-theme="matrix">
+        <span class="color-preview" style="background: linear-gradient(135deg, #0a0f0d, #00ff66);"></span>
+        Matrix Green
+      </div>
+      <div class="theme-option" data-theme="sunset">
+        <span class="color-preview" style="background: linear-gradient(135deg, #18122B, #FF8080);"></span>
+        Sunset Chill
+      </div>
+      <div class="theme-option" data-theme="nord">
+        <span class="color-preview" style="background: linear-gradient(135deg, #2e3440, #88c0d0);"></span>
+        Nordic Frost
+      </div>
+    </div>
+
+    <!-- Mode Selector Navigation Bar -->
+    <nav class="mode-bar">
+      <!-- Mode Category: Time / Words / Quotes / Code -->
+      <div class="mode-group" id="primaryModeGroup">
+        <button class="mode-btn active" data-mode="time"><i class="fa-regular fa-clock"></i> Time</button>
+        <button class="mode-btn" data-mode="words"><i class="fa-solid fa-font"></i> Words</button>
+        <button class="mode-btn" data-mode="quote"><i class="fa-solid fa-quote-left"></i> Quote</button>
+        <button class="mode-btn code-mode-btn" data-mode="code"><i class="fa-solid fa-code"></i> Code</button>
+      </div>
+
+      <div class="mode-divider"></div>
+
+      <!-- Mode Options (e.g. 15, 30, 60s or 25, 50, 100 words or JS/Python) -->
+      <div class="mode-group" id="subOptionGroup">
+        <!-- Injected dynamically based on selected mode -->
+      </div>
+
+      <div class="mode-divider"></div>
+
+      <!-- Language / Dictionary selector -->
+      <div class="mode-group" id="langGroup">
+        <button class="lang-btn active" data-lang="id">Bahasa ID</button>
+        <button class="lang-btn" data-lang="en">English</button>
+      </div>
+    </nav>
+
+    <!-- Main Typing Arena -->
+    <main class="typing-arena">
+      <!-- Live HUD Stats during typing -->
+      <div class="live-hud" id="liveHud">
+        <div class="hud-item timer-hud">
+          <span class="hud-label" id="hudTimerLabel">WAKTU</span>
+          <span class="hud-value highlight" id="hudTimer">30</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">WPM</span>
+          <span class="hud-value" id="hudWpm">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">AKURASI</span>
+          <span class="hud-value" id="hudAcc">100%</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">STREAK</span>
+          <span class="hud-value streak-val" id="hudStreak">0 🔥</span>
+        </div>
+      </div>
+
+      <!-- Focus Alert & Typing Box -->
+      <div class="typing-box-wrapper" id="typingWrapper" tabindex="0">
+        <!-- Blurring Overlay when unfocused -->
+        <div class="unfocused-overlay hidden" id="unfocusedOverlay">
+          <i class="fa-solid fa-arrow-pointer"></i>
+          <p>Klik di sini atau tekan tombol apa saja untuk fokus</p>
+        </div>
+
+        <!-- Hidden input element to reliably capture mobile & keyboard input -->
+        <input type="text" id="typingInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+        <!-- Visual Caret -->
+        <div class="caret" id="caret"></div>
+
+        <!-- Words/Code Display Container -->
+        <div class="words-container" id="wordsContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Controls below typing arena -->
+      <div class="arena-controls">
+        <button id="restartBtn" class="action-btn" title="Restart Tes (Tab + Enter)">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Restart Tes</span>
+          <kbd class="shortcut-badge">Tab + Enter</kbd>
+        </button>
+        <button id="capsLockAlert" class="caps-alert hidden">
+          <i class="fa-solid fa-lock"></i> Caps Lock Aktif
+        </button>
+      </div>
+    </main>
+
+    <!-- Result Screen (Hidden by default, shows after test complete) -->
+    <section class="result-screen hidden" id="resultScreen">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-badge">
+            <i class="fa-solid fa-trophy"></i>
+            <span id="performanceRank">Master Typer!</span>
+          </div>
+          <p class="result-subtitle" id="resultSubtitle">Luar biasa! Konsistensi dan ritme ketikan Anda sangat tajam.</p>
+        </div>
+
+        <div class="result-main-stats">
+          <div class="stat-big-box main">
+            <span class="stat-name">WPM</span>
+            <span class="stat-number glow-text" id="resultWpm">0</span>
+            <span class="stat-sub" id="resultRawWpm">Raw: 0 WPM</span>
+          </div>
+          <div class="stat-big-box">
+            <span class="stat-name">AKURASI</span>
+            <span class="stat-number" id="resultAccuracy">100%</span>
+            <span class="stat-sub" id="resultAccuracyDetails">0 salah / 0 total</span>
+          </div>
+          <div class="stat-big-box">
+            <span class="stat-name">KONSISTENSI</span>
+            <span class="stat-number" id="resultConsistency">95%</span>
+            <span class="stat-sub">Rata-rata kestabilan</span>
+          </div>
+          <div class="stat-big-box">
+            <span class="stat-name">KARAKTER</span>
+            <span class="stat-number" id="resultChars">0/0/0/0</span>
+            <span class="stat-sub font-mono">benar/salah/ekstra/skip</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Performance Graph (Chart.js) -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <h4><i class="fa-solid fa-chart-line"></i> Grafik Laju Kecepatan (WPM & Error)</h4>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="wpmChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Result Action Buttons -->
+        <div class="result-actions">
+          <button id="nextTestBtn" class="primary-btn">
+            <i class="fa-solid fa-forward"></i>
+            <span>Tes Berikutnya</span>
+            <kbd class="shortcut-badge">Enter</kbd>
+          </button>
+          <button id="repeatTestBtn" class="secondary-btn">
+            <i class="fa-solid fa-arrow-rotate-left"></i>
+            <span>Ulangi Kata Sama</span>
+          </button>
+          <button id="copyResultBtn" class="secondary-btn">
+            <i class="fa-regular fa-clipboard"></i>
+            <span>Salin Hasil</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats & History Modal -->
+    <div id="statsModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-chart-simple"></i> Riwayat & Statistik Latihan</h3>
+          <button id="closeStatsBtn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="overall-stats-grid">
+            <div class="mini-stat">
+              <span class="mini-stat-title">Total Tes</span>
+              <span class="mini-stat-value" id="statsTotalTests">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-title">WPM Tertinggi</span>
+              <span class="mini-stat-value highlight" id="statsHighestWpm">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-title">Rata-rata WPM</span>
+              <span class="mini-stat-value" id="statsAvgWpm">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-title">Rata-rata Akurasi</span>
+              <span class="mini-stat-value" id="statsAvgAcc">0%</span>
+            </div>
+          </div>
+
+          <h4 class="history-title"><i class="fa-solid fa-clock-rotate-left"></i> 10 Riwayat Terakhir</h4>
+          <div class="history-table-wrapper">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th>WPM</th>
+                  <th>Raw</th>
+                  <th>Akurasi</th>
+                  <th>Waktu</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="modal-actions">
+            <button id="clearHistoryBtn" class="danger-btn"><i class="fa-solid fa-trash-can"></i> Hapus Semua Riwayat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <div class="key-hint"><kbd>Tab</kbd> + <kbd>Enter</kbd> : Restart</div>
+        <div class="key-hint"><kbd>Esc</kbd> : Fokus Ulang</div>
+        <div class="key-hint"><kbd>M</kbd> : Mute/Unmute Suara</div>
+      </div>
+      <div class="footer-right">
+        <span>Dibuat dengan ❤️ untuk Master Typer & Programmer</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
